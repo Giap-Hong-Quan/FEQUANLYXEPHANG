@@ -8,7 +8,7 @@ import AddDeviceButton from "../AddDeviceButton";
 import UserSection from "../userSection";
 import NewQueueForm from "../NewQueueForm";
 import { formatDate } from '../../pages/dashboard/Dashboard.logic';
-import { getProvidedNumber, getTotalNumber } from "../../pages/dashboard/Dashboard.logic";
+import { getProvidedNumber, getTotalNumber, getUserData } from "../../pages/dashboard/Dashboard.logic";
 import AccountForm from "../AccountForm";
 import DeviceForm from "../DeviceForm";
 import { UserStatus, DeviceStatus, DeviceConnected, UserRole, NumberStatus } from "../../helpers/predefinedData";
@@ -241,19 +241,31 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       </>
     );
   }, [setDataUserEdit, setIsModalOpen]);
-  const deleteUser = async (email: string) => {
+  const deleteUser = (email: string): Promise<boolean> => {
     return new Promise(resolve => {
-      fetch(process.env.REACT_APP_API_URL + 'api/User/' + email, {
+      fetch(process.env.REACT_APP_API_URL + 'api/Authenticate/' + email, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         }
-      }).then(response => response.json())
-        .then(async (data: string) => {
-          resolve(data);
+      })
+        .then(response => {
+          if (response.ok) {
+            message.success('Xóa tài khoản thành công!');
+            const updatedUsers = storeData.filter((u: any) => u.email !== email);
+            dispatch(userSlice.actions.addUsersToStore(updatedUsers));
+            resolve(true);
+          } else {
+            message.error('Xóa tài khoản thất bại');
+            resolve(false);
+          }
         })
-        .catch(error => console.log(error))
-    })
+        .catch(error => {
+          console.log(error);
+          message.error('Lỗi khi xóa tài khoản');
+          resolve(false);
+        });
+    });
   }
   const columnsUser = [
     {
@@ -527,8 +539,6 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       <Modal title="Confirm Delete" open={isModelDeleteOpen} onOk={async () => {
         await deleteUser(deletedEmail);
         setIsModelDeleteOpen(false);
-        setLoading(true);
-
       }} onCancel={() => { setIsModelDeleteOpen(false) }}
         className="custom-modal"
       >
