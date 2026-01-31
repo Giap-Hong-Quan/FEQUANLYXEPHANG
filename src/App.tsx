@@ -1,8 +1,8 @@
 import React,{useState} from 'react';
-import logo from './logo.svg';
 import './App.css';
 import Login from './pages/login/Login';
 import Dashboard from './pages/dashboard/Dashboard';
+import { SignalRProvider } from './helpers/SignalRProvider';
 function App() {
   const [isLogined, setIsLogined] = useState(false);
   const receiveLogin = (isLogined:boolean) => {
@@ -10,11 +10,17 @@ function App() {
   }
   return (
     <div>
-    {localStorage.getItem('token')?<Dashboard />:
-    !isLogined?<Login handleSuccess={receiveLogin} />:<Dashboard />}   
+    {localStorage.getItem('token')?
+    <SignalRProvider>
+        <Dashboard />
+    </SignalRProvider>
+    :
+    !isLogined?<Login handleSuccess={receiveLogin} />:
+    <SignalRProvider>
+      <Dashboard />
+    </SignalRProvider>
+    }   
     </div>
   );
 }
 export default App;
-
-

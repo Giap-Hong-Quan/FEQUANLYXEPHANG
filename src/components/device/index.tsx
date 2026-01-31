@@ -1,6 +1,6 @@
 // components/DeviceList.tsx
 import React, { useEffect, useState, useContext } from "react";
-import { Table, Select, Input, Modal, Tag } from "antd";
+import { Table, Select, Input, Modal, Tag, Switch, message } from "antd";
 import _ from 'lodash';
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import "./DeviceList.css";
@@ -15,6 +15,9 @@ import { UserStatus, DeviceStatus, DeviceConnected, UserRole, NumberStatus } fro
 import ServiceForm from "../ServiceForm";
 import { SignalRContext } from "../../helpers/SignalRProvider";
 import TicketDisplay from "../TicketDisplay/TicketDisplay";
+import { useAppDispatch, useAppSelector } from "../../libraries/hook";
+import { RootState } from "../../store/store";
+import { userSlice } from "../../store/userReducers";
 const { Option } = Select;
 type DeviceListProps = {
   sendSelectedIndex: (index:number, data:any) => void;
@@ -36,6 +39,7 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   const [deletedEmail, setDeletedEmail] = useState('');
   const [isModelDeleteOpen,setIsModelDeleteOpen] = useState(false);
   const token = localStorage.getItem('token');
+  const [requiredRender, setRequireRedender] = useState(false);
   const [filter1Value, setFilter1Value] = useState('All');
   const [filter2Value, setFilter2Value] = useState('All');
   const [status, setStatus] = useState('All');
@@ -52,9 +56,10 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   const [customerName, setCustomerName] = useState<string>('');
   const [assignmentDate, setAssignmentDate] = useState<string>('');
   const [serviceName, setServiceName] = useState<string>('');
+  const storeData = useAppSelector((state:RootState)=>state.user.items);
   const [data, setData] = useState(props.data);
   const [rowCount, setRowCount] = useState(props.rowCount??1);
-  
+  const dispatch = useAppDispatch();
   const receiveStatus = (status:boolean) => {
       setIsModalOpen(status);
   }
@@ -252,7 +257,7 @@ const deleteUser = async(email:string)=>{
     .catch(error=>console.log(error))
   })
   }
-  const columnsUser = React.useMemo(()=>[
+  const columnsUser = [
     {
       title: "Email",
       dataIndex: "email",
@@ -277,14 +282,17 @@ const deleteUser = async(email:string)=>{
       title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
-      render: renderStatus
+      render: (_: any, record: any) => {
+        console.log(record.isActive);
+        return (
+          <Switch checked={record.isActive} />) }
     },
     {
       title: "",
       key: "actions",
       render: renderActions
     },
-  ], [renderStatus, renderActions]);
+  ];
   const columnsPN = [
     {
       title: "STT",
@@ -370,30 +378,40 @@ const deleteUser = async(email:string)=>{
   ];
   
   useEffect(()=>{
-    async function GetPM(){
-       let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___",1, 5, "-1");
-       setData(temp)
+    async function GetPM() {
+        let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___",1, 5, "-1");
+        setData(temp);
     }
     if(props.columns==3){
-      GetPM()
+        GetPM();
     }
-    if(connection!=null)
+    if(connection!=null){
+      const handleron = (userEmail: string) => {
+          dispatch(userSlice.actions.updateUsersStore({email:userEmail, isActive:true}))         
+      };
+      const handleroff = (userEmail: string) => {
+          dispatch(userSlice.actions.updateUsersStore({email:userEmail, isActive:false}))
+      };
       connection.on("AssignmentUpdated", async (status: boolean) => {
         if(status&&props.columns==3){
             let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___",1, 5, "-1");
             let count = await getTotalNumber('All','2000-01-01','2050-12-31', 'All', '___', 'All')
             setRowCount(count);
             setData(temp);
-        }
-  // update local state or refetch
-});
-  },[]);
+        }});
+        connection.on("OnlineNotify", handleron);         
+        connection.on("OfflineNotify", handleroff);
+        return () => {
+        connection.off("OnlineNotify", handleron); // important
+        connection.off("OfflineNotify", handleroff); // important
+      };
+  }
+  console.log(storeData);
+  },[storeData]);
   return (
     <div className="device-list">
       <div className="top-bar">
-    <div className="headerContainer">
-  <h2 className="headerText">{props.headerText}</h2>
-</div>
+      <h2>{props.headerText}</h2>
       <UserSection count={displayData.filter((x:any)=>x.status=='Đang chờ').length} />
       </div>
        {/* User section */}
@@ -466,10 +484,11 @@ const deleteUser = async(email:string)=>{
       </div>
       <div className="middleData">
       <Table style={{width:'88%'}}
-        dataSource={data}
+        rowKey={props.columns==3?'email':'deviceCode'}
+        dataSource={props.columns!=4?data:storeData}
         columns={props.columns==1?columns:props.columns==2?columnsSvc:props.columns==3?columnsPN:columnsUser}
         loading={{spinning:loading, delay:200}}
-        pagination={props.columns==1||props.columns==2?{pageSize:8}:customPagination}
+        pagination={props.columns==1||props.columns==2||props.columns==4?{pageSize:8}:customPagination}
         className="device-table"
       />
       <div style={{width:'10%', marginLeft:'10px', display:'flex', flexDirection:'row', justifyContent:'flex-start'}}>

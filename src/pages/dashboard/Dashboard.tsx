@@ -9,14 +9,17 @@ import DeviceForm from "../../components/DeviceForm";
 import DeviceDetails from "../../components/DeviceDetails";
 import DeviceUpdateForm from "../../components/DeviceUpdateForm";
 import { getServiceData, getDeviceData, getUserData, getProvidedNumber, getTotalNumber } from "./Dashboard.logic";
+import { userSlice } from "../../store/userReducers";
 import AccountForm from "../../components/AccountForm";
-import { SignalRContext } from "../../helpers/SignalRProvider";
+import { SignalRContext, SignalRProvider } from "../../helpers/SignalRProvider";
+import { useAppDispatch } from "../../libraries/hook";
 const Dashboard = () => {
     const [dataUserEdit, setDataUserEdit] = useState<any>({});
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [data, setData] = useState<any[]>([]);
     const [countItem, setCountItem] = useState(1);
-    const [serviceOptions, setServiceOptions] = useState<{value:string, label: string}[]>([])
+    const [serviceOptions, setServiceOptions] = useState<{value:string, label: string}[]>([]);
+    const dispatch = useAppDispatch();
     const handleReceiveSelectedIndex = async (index:number)=>{
       if(index==1){
           let temp = await getDeviceData();
@@ -28,13 +31,13 @@ const Dashboard = () => {
       }
       else if(index==7){
           let temp = await getUserData();
-          setData(localStorage.getItem('userRole')!='Doctor'?temp:temp.filter((x:any)=>x.email==localStorage.getItem('userName')));
+          setData(localStorage.getItem('userRole')!='Doctor'?temp:temp.filter((x:any)=>x.email==localStorage.getItem('userName')));         
       }
       else if(index==6){
           let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___",1, 5, "-1");
           let count = await getTotalNumber('All','2000-01-01','2050-12-31', 'All', '___', 'All')
-          setCountItem(count);
           setData(temp);
+          setCountItem(count);
       }
       else{
         setData([]);
@@ -65,6 +68,7 @@ const Dashboard = () => {
         getDataSvc();
     },[])
     return(
+      <SignalRProvider>
         <div className="container">
             <Sidebar sendSelectedIndex={handleReceiveSelectedIndex} />
             {selectedIndex==0?
@@ -102,7 +106,7 @@ const Dashboard = () => {
           columns={3}  filter1="Tên dịch vụ" filter2="Tình trạng"
           />
           : selectedIndex==7?
-          <Device headerText="Tài khoản > Danh sách tài khoản"
+          <Device headerText="Tài khoản người dùng > Danh sách tài khoản"
           buttonText="Thêm người dùng"
           key={`device-index-7`}
           data={data}
@@ -114,6 +118,7 @@ const Dashboard = () => {
           />
           }
         </div>
+      </SignalRProvider>
     )
 }
 export default Dashboard;

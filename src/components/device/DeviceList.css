@@ -4,32 +4,7 @@
     padding: 24px;
     background-color: #f5f5f5;
   }
-  .headerContainer {
-  margin-bottom: 24px;
-  padding-top: 16px;
-}
-
-.headerText {
-  font-family: 'Inter', sans-serif; /* Hoặc font dự án bạn đang dùng */
-  font-style: normal;
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 30px;
-  color: #FF7506; /* Màu cam cho phần tiền tố (Cấp số) */
-  display: flex;
-  align-items: center;
-}
-
-/* Nếu bạn muốn phần sau dấu > có màu đen như ảnh mẫu */
-.headerText::first-line {
-  color: #FF7506;
-}
-
-/* Cách tốt nhất: Chia nhỏ text nếu có thể hoặc dùng class cho phần con */
-.breadcrumbActive {
-  color: #282739; /* Màu đen cho "Danh sách các số đã cấp" */
-  margin-left: 8px;
-}
+  
   .device-list h2 {
     font-size: 24px;
     margin-bottom: 20px;

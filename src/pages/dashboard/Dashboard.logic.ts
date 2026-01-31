@@ -50,7 +50,8 @@ export const getUserData = async():Promise<any> => {
         let data1:any = [];
         let response = await fetchWithTokenRetry(url);
         if (response.ok) {
-          data1 = await response.json();
+          data1  = await response.json();
+          data1 = data1.map((u: any) => ({ ...u, isActive: false }));
           console.log("Data fetched successfully:", data1);
       } else {
           data1 = await response;

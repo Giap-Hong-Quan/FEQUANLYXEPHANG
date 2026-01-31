@@ -5,9 +5,15 @@ class SignalRService {
   public connection: signalR.HubConnection;
 
   private constructor() {
-    const base = process.env.REACT_APP_API_URL?.replace(/\/+$/, ""); // remove trailing /
+    const base = process.env.REACT_APP_API_URL; // remove trailing /
   this.connection = new signalR.HubConnectionBuilder()
-    .withUrl(`${base}hubs/queue`, { withCredentials: true })
+    .withUrl(`${base}hubs/queue`, {
+          accessTokenFactory: async () => {
+              return localStorage.getItem("token")||""; // Fetch JWT token from localStorage
+          },
+          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling,
+          skipNegotiation:false
+          })
     .withAutomaticReconnect()
     .build();
   }
@@ -20,7 +26,6 @@ class SignalRService {
   }
 
   async startConnection() {
-  
     try {
       if (this.connection.state === signalR.HubConnectionState.Disconnected) {
         await this.connection.start();

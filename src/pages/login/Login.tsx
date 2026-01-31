@@ -4,6 +4,9 @@ import  './Login.css';
 import { GetLogin } from "./Login.logic";
 import { SignalRContext } from "../../helpers/SignalRProvider";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { useAppDispatch } from "../../libraries/hook";
+import { getUserData } from "../dashboard/Dashboard.logic";
+import { userSlice } from "../../store/userReducers";
 
 type LoginProps = {
   handleSuccess: (isLogined:boolean) => void
@@ -11,6 +14,7 @@ type LoginProps = {
 const Login = (props: LoginProps) =>{
   const [form] = Form.useForm();
   const connection = useContext(SignalRContext);
+   const dispatch = useAppDispatch();
   const handleFinish = async (value:any) => {
       console.log(value.userName); console.log(value.password);
       let dataLogin = await GetLogin(value.userName, value.password);
@@ -25,7 +29,10 @@ const Login = (props: LoginProps) =>{
         localStorage.setItem('refreshToken', dataLogin.tokenRefresh);
         localStorage.setItem('avatar', dataLogin.avatar);
         localStorage.setItem('userRole', dataLogin.userRole);
+          let temp = await getUserData();
+        dispatch(userSlice.actions.addUsersToStore(localStorage.getItem('userRole')!='Doctor'?temp:temp.filter((x:any)=>x.email==localStorage.getItem('userName'))))
         props.handleSuccess(true);
+        
       }
   }
   return(
