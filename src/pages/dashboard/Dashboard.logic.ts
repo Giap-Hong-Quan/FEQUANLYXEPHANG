@@ -43,7 +43,7 @@ export const getDeviceData = async (): Promise<any> => {
     console.error("Failed to fetch data, status:", response.status);
   }
   return new Promise(resolve => {
-    resolve(data1)
+    resolve(data1.reverse())
   })
 }
 export const getUserData = async (): Promise<any> => {
@@ -59,7 +59,7 @@ export const getUserData = async (): Promise<any> => {
     data1 = await response;
   }
   return new Promise(resolve => {
-    resolve(data1)
+    resolve(data1.reverse())
   })
 }
 

@@ -37,7 +37,9 @@ const initialValues = {
 const DeviceList = React.memo((props: DeviceListProps) => {
   const connection = useContext(SignalRContext);
   const [deletedEmail, setDeletedEmail] = useState('');
+  const [deletedDeviceCode, setDeletedDeviceCode] = useState('');
   const [isModelDeleteOpen, setIsModelDeleteOpen] = useState(false);
+  const [isDeviceDeleteOpen, setIsDeviceDeleteOpen] = useState(false);
   const token = localStorage.getItem('token');
   const [requiredRender, setRequireRedender] = useState(false);
   const [filter1Value, setFilter1Value] = useState('All');
@@ -60,8 +62,18 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   const [data, setData] = useState(props.data);
   const [rowCount, setRowCount] = useState(props.rowCount ?? 1);
   const dispatch = useAppDispatch();
-  const receiveStatus = (status: boolean) => {
+  const receiveStatus = async (status: boolean) => {
     setIsModalOpen(status);
+    if (!status && props.columns == 1) {
+      // Refresh danh sách thiết bị sau khi thêm/cập nhật
+      const response = await fetch(process.env.REACT_APP_API_URL + 'api/Device/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const newData = await response.json();
+        setData(newData);
+      }
+    }
   }
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -157,6 +169,10 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       render: (text: string, record: any, index: number) => (
         <>
           <a href="#" style={{ marginRight: 10 }}
+            onClick={() => {
+              setDeletedDeviceCode(record.deviceCode);
+              setIsDeviceDeleteOpen(true);
+            }}
           >
             Xóa
           </a>
@@ -263,6 +279,39 @@ const DeviceList = React.memo((props: DeviceListProps) => {
         .catch(error => {
           console.log(error);
           message.error('Lỗi khi xóa tài khoản');
+          resolve(false);
+        });
+    });
+  }
+
+  const deleteDevice = (deviceCode: string): Promise<boolean> => {
+    return new Promise(resolve => {
+      fetch(process.env.REACT_APP_API_URL + 'api/Device/' + deviceCode, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      })
+        .then(async response => {
+          if (response.ok) {
+            message.success('Xóa thiết bị thành công!');
+            // Refresh danh sách thiết bị
+            const refreshResponse = await fetch(process.env.REACT_APP_API_URL + 'api/Device/', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (refreshResponse.ok) {
+              const newData = await refreshResponse.json();
+              setData(newData);
+            }
+            resolve(true);
+          } else {
+            message.error('Xóa thiết bị thất bại');
+            resolve(false);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          message.error('Lỗi khi xóa thiết bị');
           resolve(false);
         });
     });
@@ -543,6 +592,14 @@ const DeviceList = React.memo((props: DeviceListProps) => {
         className="custom-modal"
       >
         <h3>Bạn thật sự muốn xóa tài khoản này?</h3>
+      </Modal>
+      <Modal title="Xác nhận xóa thiết bị" open={isDeviceDeleteOpen} onOk={async () => {
+        await deleteDevice(deletedDeviceCode);
+        setIsDeviceDeleteOpen(false);
+      }} onCancel={() => { setIsDeviceDeleteOpen(false) }}
+        className="custom-modal"
+      >
+        <h3>Bạn thật sự muốn xóa thiết bị này?</h3>
       </Modal>
     </div>
   );

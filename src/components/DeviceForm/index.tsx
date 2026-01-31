@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Form, Input, Button, Row, Col, Select, Switch, message } from 'antd';
 import './DeviceForm.css';
 
@@ -6,37 +6,119 @@ const { Option } = Select;
 type FormProps = {
   myForm: any,
   serviceOptions: any,
-  handleSendStatus: (status:boolean)=>void
+  handleSendStatus: (status: boolean) => void
 }
-const DeviceForm = (props:FormProps) => {
+const DeviceForm = (props: FormProps) => {
   const [form] = Form.useForm();
   const token = localStorage.getItem('token');
   const initialValues = Object.keys(props.myForm).length === 0 ?
-  {
-    deviceCode: '', // Pre-fill the username field
-    deviceName: '', // Pre-fill the email field
-    ipAddress: '',
-    username:'',
-    password:'',
-    operationStatus:false,
-    connected:false
-  }
-  : {
-    deviceCode: props.myForm.deviceCode, // Pre-fill the username field
-    deviceName: props.myForm.deviceName, // Pre-fill the email field
-    ipAddress: props.myForm.ipAddress,
-    username: props.myForm.username,
-    password: props.myForm.password,
-    operationStatus: props.myForm.operationStatus=="Active"?true:false,
-    connected: props.myForm.connected=="Connected"?true:false
-  }
-  const handleFinish = async (values: any) => {
-    if(props.myForm.deviceCode==""){
-              
+    {
+      deviceCode: '',
+      deviceName: '',
+      ipAddress: '',
+      username: '',
+      password: '',
+      service: '',
+      operationStatus: false,
+      connected: false
     }
-    else{
-    
-  }
+    : {
+      deviceCode: props.myForm.deviceCode,
+      deviceName: props.myForm.deviceName,
+      ipAddress: props.myForm.ipAddress,
+      username: props.myForm.userName,
+      password: props.myForm.password,
+      service: props.myForm.services || '',
+      operationStatus: props.myForm.operationStatus == "Active" ? true : false,
+      connected: props.myForm.connected == "Connected" ? true : false
+    }
+
+  // Cập nhật form khi props.myForm thay đổi
+  useEffect(() => {
+    if (Object.keys(props.myForm).length === 0) {
+      form.setFieldsValue({
+        deviceCode: '',
+        deviceName: '',
+        ipAddress: '',
+        username: '',
+        password: '',
+        service: '',
+        operationStatus: false,
+        connected: false
+      });
+    } else {
+      form.setFieldsValue({
+        deviceCode: props.myForm.deviceCode,
+        deviceName: props.myForm.deviceName,
+        ipAddress: props.myForm.ipAddress,
+        username: props.myForm.userName,
+        password: props.myForm.password,
+        service: props.myForm.services || '',
+        operationStatus: props.myForm.operationStatus == "Active" ? true : false,
+        connected: props.myForm.connected == "Connected" ? true : false
+      });
+    }
+  }, [props.myForm, form]);
+  const handleFinish = async (values: any) => {
+    const deviceData = {
+      DeviceCode: values.deviceCode,
+      DeviceName: values.deviceName,
+      IpAddress: values.ipAddress,
+      UserName: values.username,
+      Password: values.password,
+      Services: values.service || "",
+      OperationStatus: values.operationStatus ? true : false,
+      Connected: values.connected ? true : false
+    };
+
+    if (props.myForm.deviceCode == "" || props.myForm.deviceCode == null) {
+      // Thêm mới thiết bị
+      fetch(process.env.REACT_APP_API_URL + 'api/Device', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(deviceData),
+      })
+        .then(response => {
+          if (response.ok) {
+            message.success('Thêm thiết bị thành công!');
+            props.handleSendStatus(false);
+          } else {
+            message.error('Thêm thiết bị thất bại');
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          message.error('Có lỗi xảy ra');
+        });
+    }
+    else {
+      // Cập nhật thiết bị
+      fetch(process.env.REACT_APP_API_URL + 'api/Device/' + props.myForm.deviceCode, {
+        method: 'PUT',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(deviceData),
+      })
+        .then(response => {
+          if (response.ok) {
+            message.success('Cập nhật thiết bị thành công!');
+            props.handleSendStatus(false);
+          } else {
+            message.error('Cập nhật thiết bị thất bại');
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          message.error('Có lỗi xảy ra');
+        });
+    }
   };
 
   return (
@@ -79,20 +161,19 @@ const DeviceForm = (props:FormProps) => {
             <Form.Item
               name="service"
               label="Dịch vụ sử dụng"
-              rules={[{ required: true, message: 'Dịch vụ sử dụng là bắt buộc' }]}
             >
               <Input placeholder="Nhập dịch vụ sử dụng" />
             </Form.Item>
           </Col>
           {/* Cột 2 */}
           <Col xs={24} lg={12}>
-          <Form.Item label="Đang hoạt động" name="operationStatus" valuePropName="checked">
+            <Form.Item label="Đang hoạt động" name="operationStatus" valuePropName="checked">
               <Switch />
-          </Form.Item>
-          <Form.Item label="Đang kết nối" name="connected" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-          <Form.Item
+            </Form.Item>
+            <Form.Item label="Đang kết nối" name="connected" valuePropName="checked">
+              <Switch />
+            </Form.Item>
+            <Form.Item
               name="username"
               label="Tên đăng nhập"
               rules={[{ required: true, message: 'Tên đăng nhập là bắt buộc' }]}
