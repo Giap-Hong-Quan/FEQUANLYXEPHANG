@@ -62,7 +62,7 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   const [data, setData] = useState(props.data);
   const [rowCount, setRowCount] = useState(props.rowCount ?? 1);
   const dispatch = useAppDispatch();
-  const receiveStatus = async (status: boolean) => {
+  const receiveStatus = async (status: boolean, isNew?: boolean) => {
     setIsModalOpen(status);
     if (!status && props.columns == 1) {
       // Refresh danh sách thiết bị sau khi thêm/cập nhật
@@ -71,7 +71,26 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       });
       if (response.ok) {
         const newData = await response.json();
-        setData(newData);
+        const sortedData = newData.sort((a: any, b: any) => b.deviceCode.localeCompare(a.deviceCode));
+        if (isNew === true) {
+          setData((prevData: any[]) => {
+            const existingCodes = prevData.map((d: any) => d.deviceCode);
+            const newDevice = sortedData.find((d: any) => !existingCodes.includes(d.deviceCode));
+            if (newDevice) {
+              return [newDevice, ...prevData];
+            }
+            return sortedData;
+          });
+        } else if (isNew === false) {
+          setData((prevData: any[]) => {
+            return prevData.map((item: any) => {
+              const updated = sortedData.find((d: any) => d.deviceCode === item.deviceCode);
+              return updated || item;
+            });
+          });
+        } else {
+          setData(sortedData);
+        }
       }
     }
   }
@@ -286,23 +305,23 @@ const DeviceList = React.memo((props: DeviceListProps) => {
 
   const deleteDevice = (deviceCode: string): Promise<boolean> => {
     return new Promise(resolve => {
-      fetch(process.env.REACT_APP_API_URL + 'api/Device/' + deviceCode, {
+      const url = process.env.REACT_APP_API_URL + 'api/Device/' + deviceCode;
+      console.log('Deleting device at URL:', url);
+      console.log('DeviceCode:', deviceCode);
+      fetch(url, {
         method: 'DELETE',
         headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-        }
+        },
+        body: JSON.stringify({ DeviceCode: deviceCode })
       })
         .then(async response => {
+          console.log('Delete response status:', response.status);
           if (response.ok) {
             message.success('Xóa thiết bị thành công!');
-            // Refresh danh sách thiết bị
-            const refreshResponse = await fetch(process.env.REACT_APP_API_URL + 'api/Device/', {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (refreshResponse.ok) {
-              const newData = await refreshResponse.json();
-              setData(newData);
-            }
+            setData((prevData: any[]) => prevData.filter((d: any) => d.deviceCode !== deviceCode));
             resolve(true);
           } else {
             message.error('Xóa thiết bị thất bại');

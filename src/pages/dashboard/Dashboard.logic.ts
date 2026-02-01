@@ -43,7 +43,8 @@ export const getDeviceData = async (): Promise<any> => {
     console.error("Failed to fetch data, status:", response.status);
   }
   return new Promise(resolve => {
-    resolve(data1.reverse())
+    const sorted = data1.sort((a: any, b: any) => b.deviceCode.localeCompare(a.deviceCode));
+    resolve(sorted)
   })
 }
 export const getUserData = async (): Promise<any> => {
@@ -52,7 +53,6 @@ export const getUserData = async (): Promise<any> => {
   let response = await fetchWithTokenRetry(url);
   if (response.ok) {
     data1 = await response.json();
-    // Giữ nguyên isActive từ API nếu có, chỉ set false nếu chưa có
     data1 = data1.map((u: any) => ({ ...u, isActive: u.isActive ?? false }));
     console.log("Data fetched successfully:", data1);
   } else {

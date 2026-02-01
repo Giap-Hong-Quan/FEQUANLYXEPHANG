@@ -6,7 +6,7 @@ const { Option } = Select;
 type FormProps = {
   myForm: any,
   serviceOptions: any,
-  handleSendStatus: (status: boolean) => void
+  handleSendStatus: (status: boolean, isNew?: boolean) => void
 }
 const DeviceForm = (props: FormProps) => {
   const [form] = Form.useForm();
@@ -71,7 +71,10 @@ const DeviceForm = (props: FormProps) => {
       Connected: values.connected ? true : false
     };
 
-    if (props.myForm.deviceCode == "" || props.myForm.deviceCode == null) {
+    console.log('props.myForm:', props.myForm);
+    console.log('props.myForm.deviceCode:', props.myForm.deviceCode);
+
+    if (props.myForm.deviceCode == "" || props.myForm.deviceCode == null || props.myForm.deviceCode == undefined) {
       // Thêm mới thiết bị
       fetch(process.env.REACT_APP_API_URL + 'api/Device', {
         method: 'POST',
@@ -85,7 +88,7 @@ const DeviceForm = (props: FormProps) => {
         .then(response => {
           if (response.ok) {
             message.success('Thêm thiết bị thành công!');
-            props.handleSendStatus(false);
+            props.handleSendStatus(false, true);
           } else {
             message.error('Thêm thiết bị thất bại');
           }
@@ -109,7 +112,7 @@ const DeviceForm = (props: FormProps) => {
         .then(response => {
           if (response.ok) {
             message.success('Cập nhật thiết bị thành công!');
-            props.handleSendStatus(false);
+            props.handleSendStatus(false, false);
           } else {
             message.error('Cập nhật thiết bị thất bại');
           }
@@ -139,7 +142,10 @@ const DeviceForm = (props: FormProps) => {
               label="Mã thiết bị"
               rules={[{ required: true, message: 'Mã thiết bị là bắt buộc' }]}
             >
-              <Input placeholder="Nhập mã thiết bị" />
+              <Input
+                placeholder="Nhập mã thiết bị"
+                disabled={!!props.myForm.deviceCode}
+              />
             </Form.Item>
             <Form.Item
               name="deviceName"
