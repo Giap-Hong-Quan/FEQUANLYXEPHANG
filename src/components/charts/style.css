@@ -1,13 +1,27 @@
 .custom-tooltip {
-    background: #4f8dff;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 14px;
-  }
-  
-  .label {
-    text-align: center;
-  }
-  
+  background: #4f8dff;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.label {
+  text-align: center;
+}
+
+/* Tùy chỉnh Select filter biểu đồ */
+.chart-selector .ant-select-selector {
+  border-radius: 8px !important;
+  border: 1px solid #D4D4D7 !important;
+  height: 38px !important;
+  display: flex;
+  align-items: center;
+}
+
+.chart-selector .ant-select-selection-item {
+  font-weight: 400;
+  color: #535261;
+  font-size: 14px;
+}
