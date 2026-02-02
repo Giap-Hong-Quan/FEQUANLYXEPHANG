@@ -11,8 +11,8 @@ const AddDeviceButton = (props:AddDeviceButtonProps) => {
     props.sendStatus(true);
   }
   return (
-    <div className="add-device-button">
-      <PlusOutlined className="icon" onClick={handleClick} />
+    <div className="add-device-button" onClick={handleClick} role="button">
+      <PlusOutlined className="icon" />
       <p>{props.headerText}</p>
     </div>
   );

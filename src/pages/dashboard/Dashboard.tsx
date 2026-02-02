@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [countItem, setCountItem] = useState(1);
   const [serviceOptions, setServiceOptions] = useState<{ value: string, label: string }[]>([]);
   const dispatch = useAppDispatch();
+  const signalRConnection = useContext(SignalRContext);
   const handleReceiveSelectedIndex = async (index: number) => {
     if (index == 1) {
       let temp = await getDeviceData();
@@ -40,7 +41,7 @@ const Dashboard = () => {
       dispatch(userSlice.actions.addUsersToStore(filteredData));
     }
     else if (index == 6) {
-      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 5, "-1");
+      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 10, "-1");
       let count = await getTotalNumber('All', '2000-01-01', '2050-12-31', 'All', '___', 'All')
       setData(temp);
       setCountItem(count);
@@ -104,7 +105,7 @@ const Dashboard = () => {
         dispatch(userSlice.actions.addUsersToStore(filteredData));
       }
       else if (index == 6) {
-        let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 5, "-1");
+        let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 10, "-1");
         let count = await getTotalNumber('All', '2000-01-01', '2050-12-31', 'All', '___', 'All')
         setData(temp);
         setCountItem(count);
@@ -114,7 +115,39 @@ const Dashboard = () => {
     getDataSvc();
     loadUsersToStore();
     loadDataForIndex(savedIndex);
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    if (!signalRConnection) return;
+
+    const handleQueueUpdate = async () => {
+      console.log("SignalR: Received queue update");
+      if (selectedIndex === 6) {
+        try {
+          let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 10, "-1");
+          let count = await getTotalNumber('All', '2000-01-01', '2050-12-31', 'All', '___', 'All');
+          setData(temp);
+          setCountItem(count);
+          console.log("Queue list updated successfully!");
+        } catch (error) {
+          console.error("Error updating queue list:", error);
+        }
+      }
+    };
+
+    signalRConnection.on("ReceiveQueueUpdate", handleQueueUpdate);
+    signalRConnection.on("QueueCreated", handleQueueUpdate);
+    signalRConnection.on("NewQueue", handleQueueUpdate);
+
+    console.log("SignalR: Subscribed to queue events");
+
+    return () => {
+      signalRConnection.off("ReceiveQueueUpdate", handleQueueUpdate);
+      signalRConnection.off("QueueCreated", handleQueueUpdate);
+      signalRConnection.off("NewQueue", handleQueueUpdate);
+      console.log("SignalR: Unsubscribed from queue events");
+    };
+  }, [signalRConnection, selectedIndex])
   return (
     <SignalRProvider>
       <div className="container">
