@@ -5,76 +5,97 @@ import { CalendarOutlined, CheckCircleOutlined, PhoneOutlined, BookOutlined } fr
 import "./MainContent.css";
 import ChartSection from "../charts";
 import { getSummaryData } from "./MainContent.logic";
+interface CardData {
+  icon: React.ReactNode;
+  title: string;
+  value: number;
+  percentage: string;
+  isPositive: boolean;
+  color: string;
+}
+
 const MainContent: React.FC = () => {
-  const token = localStorage.getItem('token')??'';
-  const [cardsData, setCardsData] = useState([
+  const token = localStorage.getItem('token') ?? '';
+  const [cardsData, setCardsData] = useState<CardData[]>([
     {
-      icon: <CalendarOutlined style={{ color: "#409EFF" }} />,
+      icon: <CalendarOutlined style={{ fontSize: '20px' }} />,
       title: "Số thứ tự đã cấp",
       value: 4221,
       percentage: "32.41%",
       isPositive: true,
+      color: "#6695FF",
     },
     {
-      icon: <CheckCircleOutlined style={{ color: "#52C41A" }} />,
+      icon: <CheckCircleOutlined style={{ fontSize: '20px' }} />,
       title: "Số thứ tự đã sử dụng",
       value: 3721,
       percentage: "32.41%",
       isPositive: false,
+      color: "#35C75A",
     },
     {
-      icon: <PhoneOutlined style={{ color: "#FA8C16" }} />,
+      icon: <PhoneOutlined style={{ fontSize: '20px' }} />,
       title: "Số thứ tự đang chờ",
       value: 468,
       percentage: "56.41%",
       isPositive: true,
+      color: "#FFAC6A",
     },
     {
-      icon: <BookOutlined style={{ color: "#F5222D" }} />,
+      icon: <BookOutlined style={{ fontSize: '20px' }} />,
       title: "Số thứ tự đã bỏ qua",
       value: 32,
       percentage: "22.41%",
       isPositive: false,
+      color: "#F86D6D",
     },
   ]);
-  async function getStatistic() {
+  useEffect(() => {
+    async function getStatistic() {
       let temp = await getSummaryData(token);
-      setCardsData([
-        {
-          icon: <CalendarOutlined style={{ color: "#409EFF" }} />,
-          title: "Số thứ tự đã cấp",
-          value: temp.total,
-          percentage: "100%",
-          isPositive: true,
-        },
-        {
-          icon: <CheckCircleOutlined style={{ color: "#52C41A" }} />,
-          title: "Số thứ tự đã sử dụng",
-          value: temp.connected,
-          percentage: Math.ceil(temp.connected*100/temp.total).toString()+'%',
-          isPositive: false,
-        },
-        {
-          icon: <PhoneOutlined style={{ color: "#FA8C16" }} />,
-          title: "Số thứ tự đang chờ",
-          value: temp.active,
-          percentage: Math.ceil(temp.active*100/temp.total).toString()+'%',
-          isPositive: true,
-        },
-        {
-          icon: <BookOutlined style={{ color: "#F5222D" }} />,
-          title: "Số thứ tự đã bỏ qua",
-          value: temp.total - temp.active - temp.connected,
-          percentage: Math.ceil((temp.total - temp.active - temp.connected)*100/temp.total).toString()+'%',
-          isPositive: false,
-        },
-      ])
-  }
-  useEffect(()=>{
+      if (temp) {
+        setCardsData([
+          {
+            icon: <CalendarOutlined style={{ fontSize: '20px' }} />,
+            title: "Số thứ tự đã cấp",
+            value: temp.total,
+            percentage: "32.41%",
+            isPositive: true,
+            color: "#6695FF",
+          },
+          {
+            icon: <CheckCircleOutlined style={{ fontSize: '20px' }} />,
+            title: "Số thứ tự đã sử dụng",
+            value: temp.connected,
+            percentage: "32.41%",
+            isPositive: false,
+            color: "#35C75A",
+          },
+          {
+            icon: <PhoneOutlined style={{ fontSize: '20px' }} />,
+            title: "Số thứ tự đang chờ",
+            value: temp.active,
+            percentage: "56.41%",
+            isPositive: true,
+            color: "#FFAC6A",
+          },
+          {
+            icon: <BookOutlined style={{ fontSize: '20px' }} />,
+            title: "Số thứ tự đã bỏ qua",
+            value: temp.total - temp.active - temp.connected,
+            percentage: "22.41%",
+            isPositive: false,
+            color: "#F86D6D",
+          },
+        ]);
+      }
+    }
     getStatistic();
-  },[])
+  }, [token]);
+
   return (
     <div className="main-content">
+      <h3 className="dashboard-breadcrumb">Dashboard</h3>
       <h2>Biểu đồ cấp số</h2>
       <div className="info-cards">
         {cardsData.map((card, index) => (
@@ -85,11 +106,12 @@ const MainContent: React.FC = () => {
             value={card.value}
             percentage={card.percentage}
             isPositive={card.isPositive}
+            color={card.color}
           />
         ))}
       </div>
       <div className="info-cards">
-      <ChartSection />
+        <ChartSection />
       </div>
     </div>
   );

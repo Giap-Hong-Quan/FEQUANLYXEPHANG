@@ -1,105 +1,169 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Select, Button, Input, message } from 'antd';
 import './NewQueueForm.css';
-import { SignalRContext } from '../../helpers/SignalRProvider';
-import { getServiceData } from '../../pages/dashboard/Dashboard.logic';
+import { getServiceData, getDeviceData } from '../../pages/dashboard/Dashboard.logic';
+
 const { Option } = Select;
 
 type NewQueueFormProps = {
-  serviceOptions: {value:string, label: string}[];
-  isNumberDisplay: (status:boolean, data:any) => void;
-}
-const NewQueueForm = (props:NewQueueFormProps) => {
+  serviceOptions?: { value: string; label: string }[]; // optional
+  isNumberDisplay: (status: boolean, data: any) => void;
+};
+
+const NewQueueForm: React.FC<NewQueueFormProps> = (props) => {
   const [form] = Form.useForm();
-  const [serviceOptions, setServiceOptions] = useState<{value:string, label: string}[]>([])
-  
+
+  const [serviceOptions, setServiceOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [deviceOptions, setDeviceOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  // ================= SUBMIT =================
   const handleFinish = async (values: any) => {
-    console.log('Selected Service:', values);
+    console.log('SEND VALUES:', values);
+
+    const payload = {
+      code: 'abc', // backend thường tự sinh → giữ cũng được
+      customerName: values.customerName,
+      telephone: values.telephone,
+      status: 0,
+      deviceCode: values.deviceCode,     // ✅ QUAN TRỌNG
+      serviceCode: values.serviceCode,
+      assignmentDate: new Date().toISOString(),
+      expireDate: new Date().toISOString(),
+    };
+
+    console.log('PAYLOAD:', payload);
+
     try {
-      const response = await fetch(process.env.REACT_APP_API_URL+'api/Assignment/', {
-        method: 'POST',
-        headers:{
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({code: 'abc', customerName: values.customerName , telephone: values.telephone, status: 0, deviceCode: 'KIO_06',
-          serviceCode: values.serviceCode, assignmentDate: (new Date()).toISOString(), expireDate: (new Date()).toISOString()}),
-      });
-      if (response.ok) {
-          const data = await response.json();
-          console.log(data);
-          props.isNumberDisplay(true, data);
-      } else {
-        message.error('Bạn không được cập nhật thông tin người khác');
+      const response = await fetch(
+        process.env.REACT_APP_API_URL + 'api/Assignment',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('API ERROR:', errText);
+        message.error('Cấp số thất bại');
+        return;
       }
+
+      // ✅ FIX lỗi JSON rỗng
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
+      console.log('API RESPONSE:', data);
+
+      message.success('Cấp số thành công');
+      props.isNumberDisplay(true, data);
+      form.resetFields();
+
     } catch (error) {
-        console.log(error);
+      console.error('FETCH ERROR:', error);
+      message.error('Không kết nối được server');
     }
   };
 
-  const handleCancel = () => {
-    console.log('Form canceled');
-  };
-  useEffect(()=>{
-      async function getData(){
-        let service = await getServiceData();
-        console.log(service);
-        setServiceOptions(service.map((item:any)=>{
-          return {value: item.serviceCode, label: item.serviceName}
-        }));
+  // ================= LOAD DATA =================
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const services = await getServiceData();
+        const devices = await getDeviceData();
+
+        setServiceOptions(
+          services.map((s: any) => ({
+            value: s.serviceCode,
+            label: s.serviceName,
+          }))
+        );
+
+        setDeviceOptions(
+          devices.map((d: any) => ({
+            value: d.deviceCode,
+            label: d.deviceCode,
+          }))
+        );
+      } catch (e) {
+        console.error(e);
+        message.error('Không tải được dữ liệu');
       }
-      getData();
-  },[props.isNumberDisplay])
+    }
+
+    loadData();
+  }, []);
+
+  // ================= RENDER =================
   return (
     <div className="new-queue-form-container">
       <h2 className="new-queue-form-title">CẤP SỐ MỚI</h2>
+
       <Form
         form={form}
         layout="vertical"
         onFinish={handleFinish}
         className="new-queue-form"
       >
+        {/* DỊCH VỤ */}
         <Form.Item
           name="serviceCode"
-          label="Dịch vụ khách hàng lựa chọn"
+          label="Dịch vụ"
           rules={[{ required: true, message: 'Vui lòng chọn dịch vụ' }]}
         >
           <Select placeholder="Chọn dịch vụ">
-            {serviceOptions.map(item=>{
-              return(
-                <Option value={item.value}>{item.label}</Option>
-              )
-            })}
+            {serviceOptions.map((s) => (
+              <Option key={s.value} value={s.value}>
+                {s.label}
+              </Option>
+            ))}
           </Select>
         </Form.Item>
+
+        {/* THIẾT BỊ */}
         <Form.Item
-              name="customerName"
-              label="Tên khách hàng"
-              rules={[{ required: true, message: 'Họ tên là bắt buộc' }]}
-            >
-              <Input placeholder="Nhập họ tên" />
-            </Form.Item>
-            <Form.Item
-              name="telephone"
-              label="Số điện thoại"
-              rules={[{ required: true, message: 'Số điện thoại là bắt buộc' }]}
-            >
-              <Input placeholder="Nhập số điện thoại" />
-            </Form.Item>
-            <Form.Item
-              name="customerEmail"
-              label="Email"
-            >
-              <Input placeholder="Nhập email" />
-            </Form.Item>
+          name="deviceCode"
+          label="Nguồn cấp (Thiết bị)"
+          rules={[{ required: true, message: 'Vui lòng chọn thiết bị' }]}
+        >
+          <Select placeholder="Chọn thiết bị">
+            {deviceOptions.map((d) => (
+              <Option key={d.value} value={d.value}>
+                {d.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        {/* TÊN KHÁCH HÀNG */}
+        <Form.Item
+          name="customerName"
+          label="Tên khách hàng"
+          rules={[{ required: true, message: 'Nhập tên khách hàng' }]}
+        >
+          <Input placeholder="Nhập tên khách hàng" />
+        </Form.Item>
+
+        {/* SĐT */}
+        <Form.Item
+          name="telephone"
+          label="Số điện thoại"
+          rules={[{ required: true, message: 'Nhập số điện thoại' }]}
+        >
+          <Input placeholder="Nhập số điện thoại" />
+        </Form.Item>
+
         <Form.Item>
-          <div className="form-actions">
-            <Button htmlType="button" onClick={handleCancel}>
-              Hủy bỏ
-            </Button>
-            <Button type="primary" htmlType="submit">
-              In số
-            </Button>
-          </div>
+          <Button type="primary" htmlType="submit" block>
+            In số
+          </Button>
         </Form.Item>
       </Form>
     </div>
