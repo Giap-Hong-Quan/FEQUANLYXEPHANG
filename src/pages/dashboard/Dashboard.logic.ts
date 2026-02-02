@@ -74,7 +74,10 @@ export const getServiceData = async (): Promise<any> => {
     console.error("Failed to fetch data, status:", response.status);
   }
   return new Promise(resolve => {
-    resolve(data1)
+    const sorted = data1.sort((a: any, b: any) =>
+      String(a.serviceCode).localeCompare(String(b.serviceCode))
+    );
+    resolve(sorted);
   })
 }
 export const getTotalNumber = async (serviceCode: string, start: string, end: string, deviceCode: string, searchText: string, status: string): Promise<number> => {

@@ -14,27 +14,85 @@
     margin-bottom: 16px;
   }
   
-  .rules-section {
-    margin-top: 24px;
-  }
-  
-  .rules-section h3 {
-    font-size: 16px;
-    color: #ff7506;
-    margin-bottom: 16px;
-  }
-  
-  .rule-input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  
-  .to-text {
-    font-size: 14px;
-    color: #333;
-  }
+.rules-section {
+  margin-top: 24px;
+}
+
+.rules-section-title {
+  font-size: 16px;
+  color: #ff7506;
+  margin: 0 0 4px 0;
+  font-weight: 600;
+}
+
+.rules-section-desc {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.rules-block {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.rules-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.rules-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.rules-label {
+  font-size: 14px;
+  color: #333;
+  min-width: 72px;
+}
+
+.rules-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rules-range-inputs .rules-input-num {
+  width: 88px;
+  text-align: center;
+}
+
+.rules-to {
+  font-size: 14px;
+  color: #666;
+}
+
+.rules-checkbox {
+  margin-left: 8px;
+}
+
+.rules-row-format {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.rules-row-format .rules-format-item {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0;
+}
+
+.rules-reset-item {
+  margin-bottom: 0;
+  margin-top: 4px;
+}
   
   .form-actions {
     display: flex;

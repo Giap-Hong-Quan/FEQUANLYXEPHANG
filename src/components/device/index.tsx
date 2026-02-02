@@ -8,7 +8,7 @@ import AddDeviceButton from "../AddDeviceButton";
 import UserSection from "../userSection";
 import NewQueueForm from "../NewQueueForm";
 import { formatDate } from '../../pages/dashboard/Dashboard.logic';
-import { getProvidedNumber, getTotalNumber, getUserData } from "../../pages/dashboard/Dashboard.logic";
+import { getProvidedNumber, getTotalNumber, getUserData, getServiceData } from "../../pages/dashboard/Dashboard.logic";
 import AccountForm from "../AccountForm";
 import DeviceForm from "../DeviceForm";
 import { UserStatus, DeviceStatus, DeviceConnected, UserRole, NumberStatus } from "../../helpers/predefinedData";
@@ -63,6 +63,10 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   const [rowCount, setRowCount] = useState(props.rowCount ?? 1);
   const dispatch = useAppDispatch();
   const receiveStatus = async (status: boolean, isNew?: boolean) => {
+    if (status && props.columns == 2) {
+      // Mở modal ở màn dịch vụ từ nút \"Thêm dịch vụ\" -> reset form về trạng thái thêm mới
+      setDataUserEdit({});
+    }
     setIsModalOpen(status);
     if (!status && props.columns == 1) {
       // Refresh danh sách thiết bị sau khi thêm/cập nhật
@@ -92,6 +96,10 @@ const DeviceList = React.memo((props: DeviceListProps) => {
           setData(sortedData);
         }
       }
+    }
+    if (!status && props.columns == 2) {
+      const temp = await getServiceData();
+      setData(temp || []);
     }
   }
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -235,13 +243,17 @@ const DeviceList = React.memo((props: DeviceListProps) => {
     {
       title: "Hành động",
       key: "actions",
-      render: () => (
+      render: (_: any, record: any) => (
         <>
-          <a href="#" style={{ marginRight: 10 }} >
-            Chi tiết
+          <a
+            href="#"
+            onClick={() => {
+              setDataUserEdit(record);
+              setIsModalOpen(true);
+            }}
+          >
+            Cập nhật
           </a>
-          <a href="#"
-          >Cập nhật</a>
         </>
       ),
     },
@@ -594,7 +606,7 @@ const DeviceList = React.memo((props: DeviceListProps) => {
           handleSendStatus={receiveStatus}
         /> : props.columns == 1 ? <DeviceForm myForm={dataUserEdit} serviceOptions={serviceOptions}
           handleSendStatus={receiveStatus} />
-          : <ServiceForm />
+          : <ServiceForm handleSendStatus={receiveStatus} service={dataUserEdit} />
         }
       </Modal>
       <Modal title="" open={isModelNumberOpen} onOk={handleNumberOk} onCancel={handleNumberCancel}
