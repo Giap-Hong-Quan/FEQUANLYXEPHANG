@@ -1,32 +1,45 @@
-/* components/RightSidebar/RightSidebar.css */
 .right-sidebar {
-  width: 30%;
-  padding: 20px;
+  width: 400px;
+  padding: 24px;
   background: #fff;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: 100vh;
+  overflow-y: auto;
 }
-
-.right-sidebar h2 {
-  font-size: 24px;
-  color: #FF7506;
-  font-weight: 700;
-  position: relative;
-  display: inline-block;
-}
-
-
 
 /* User Info */
 .user-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-  width: 100%;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.notification-wrapper {
+  position: relative;
+  background: #fff2e7;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  cursor: pointer;
+}
+
+.notification-icon {
+  font-size: 20px;
+  color: #ff7506;
+}
+
+.notification-wrapper .dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background: #ff4d4f;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
 }
 
 .user-profile-info {
@@ -35,64 +48,91 @@
   gap: 12px;
 }
 
-.user-info .notification-icon {
-  font-size: 24px;
-  color: #ffa500;
-}
-
-.user-info .user p {
+.user p {
   margin: 0;
-  font-size: 14px;
-  color: #888;
-}
-
-.user-info .user h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-}
-
-/* Summary Section */
-.summary {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.summary-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.summary-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.summary-info h3 {
-  font-size: 24px;
-  margin: 0;
-}
-
-.summary-info p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.details {
   font-size: 12px;
-  color: #595959;
-  margin-top: 8px;
+  color: #7e7d88;
 }
 
-/* Calendar Section */
-.calendar {
-  margin-top: 24px;
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.user h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #535261;
+}
+
+.overview-title {
+  font-size: 24px;
+  color: #ff7506;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Calendar Card */
+.calendar-card {
+  background: #ffffff;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* Custom Calendar Header */
+.custom-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ebebeb;
+  margin-bottom: 12px;
+}
+
+.header-date-text {
+  color: #ff7506;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.nav-arrow {
+  color: #ff7506;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Calendar Body Overrides */
+.calendar-card .ant-picker-content thead th {
+  color: #ff7506 !important;
+  font-weight: 700 !important;
+  padding-bottom: 10px !important;
+}
+
+.calendar-card .ant-picker-cell-inner {
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  margin: 0 auto !important;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+/* Ngày được chọn */
+.calendar-card .ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #ff7506 !important;
+  color: #fff !important;
+}
+
+/* Ngày hiện tại (nếu chưa chọn) */
+.calendar-card .ant-picker-cell-today .ant-picker-cell-inner {
+  color: #ff7506;
+  font-weight: 700;
+}
+
+/* Ngày ngoài tháng */
+.calendar-card .ant-picker-cell-out-view {
+  color: #c4c4c4 !important;
+}
+
+.calendar-card .ant-picker-panel,
+.calendar-card .ant-picker-calendar {
+  border: none !important;
 }

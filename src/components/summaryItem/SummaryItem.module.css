@@ -7,7 +7,9 @@
   border-radius: 12px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid #f0f0f0;
+  font-size: 44px;
   margin-bottom: 12px;
+
   gap: 12px;
 }
 
@@ -69,8 +71,9 @@
 
 .detailRow {
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
   align-items: center;
+  gap: 12px;
 }
 
 .labelContainer {

@@ -8,6 +8,7 @@ interface InfoCardProps {
   value: number;
   percentage: string;
   isPositive: boolean;
+  color?: string;
 }
 
 const InfoCard: React.FC<InfoCardProps> = ({
@@ -16,11 +17,12 @@ const InfoCard: React.FC<InfoCardProps> = ({
   value,
   percentage,
   isPositive,
+  color,
 }) => {
   return (
     <div className="info-card">
       <div className="info-card-header">
-        <div className="icon">{icon}</div>
+        <div className="icon" style={{ backgroundColor: `${color}26`, color: color }}>{icon}</div>
         <p>{title}</p>
       </div>
       <div className="info-card-body">

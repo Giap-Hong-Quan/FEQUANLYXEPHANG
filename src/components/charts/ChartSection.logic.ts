@@ -4,7 +4,7 @@ import { resolve } from "path"
 export const getChartData = async (optionSelected: string): Promise<{ name: string, value: number }[]> => {
     const token = localStorage.getItem('token');
     return new Promise(resolve => {
-        let currentMonth = 1; // Khởi tạo bắt đầu từ tháng 1 theo yêu cầu
+        let currentMonth = 2; // Khởi tạo bắt đầu từ tháng 2 theo yêu cầu
         if (optionSelected == "0")
             fetch(process.env.REACT_APP_API_URL + 'api/Assignment/statisticbymonth/' + currentMonth + '/', {
                 method: 'GET',

@@ -1,28 +1,33 @@
 /* components/Sidebar/Sidebar.css */
 .sidebar {
-    width: 240px;
-    background-color: #fff;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  }
-  .sidebar_logo{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-.sidebar_imglogo{
-    width: 80px;
-    height: 64px;
-    margin: 32px 60px;
+  width: 200px;
+  background-color: #fff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
+
+.sidebar_logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar_imglogo {
+  width: 80px;
+  height: 64px;
+  margin: 32px 60px;
+}
+
 .sider-content {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;   /* Đẩy logout xuống đáy */
+  justify-content: space-between;
+  /* Đẩy logout xuống đáy */
 }
+
 /* Menu tổng */
 .sidebar-menu {
   border-inline-end: none;
@@ -32,13 +37,13 @@
 /* Item menu */
 .sidebar-menu .ant-menu-item,
 .sidebar-menu .ant-menu-submenu-title {
-      color: #7E7D88;
+  color: #7E7D88;
   height: 48px;
   line-height: 48px;
-  margin: 0 !important;               
-  padding: 0 16px !important;        
+  margin: 0 !important;
+  padding: 0 16px !important;
   width: 100%;
-  box-sizing: border-box;              
+  box-sizing: border-box;
   border-radius: 0 !important;
 }
 
@@ -70,7 +75,7 @@
 
 /* Submenu item */
 .sidebar-menu .ant-menu-submenu .ant-menu-item {
-  padding-left: 48px !important;       
+  padding-left: 48px !important;
 }
 
 /* ===== SUBMENU POPUP FIX ===== */
@@ -136,29 +141,29 @@
   padding: 0 24px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
-  .logout-button {
-    height: 48px;
-    margin: 16px;
-    background-color: #fff2e7 !important;
-    border: none !important;
-    color: #ff9138 !important;
-    font-weight: 600;
-  }
-  
+
+.logout-button {
+  height: 48px;
+  margin: 16px;
+  background-color: #fff2e7 !important;
+  border: none !important;
+  color: #ff9138 !important;
+  font-weight: 600;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {
-    .sidebar {
-      width: 80px;
-    }
-  
-    .logo img {
-      max-width: 60%;
-    }
-  
-    .menu .ant-menu-item {
-      font-size: 12px;
-      padding: 8px;
-    }
+  .sidebar {
+    width: 80px;
   }
-  
+
+  .logo img {
+    max-width: 60%;
+  }
+
+  .menu .ant-menu-item {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
