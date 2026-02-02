@@ -104,7 +104,7 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   }
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const customPagination = {
     current: currentPage,
     pageSize: pageSize,
@@ -114,8 +114,9 @@ const DeviceList = React.memo((props: DeviceListProps) => {
     onChange: async (page: number) => {
       setLoading(true);
       setCurrentPage(page);
-      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", page, 5, "-1");
+      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", page, pageSize, "-1");
       setData(temp);
+      setDisplayData(temp);
       setLoading(false);
     },
     onShowSizeChange: async (current: number, newSize: number) => {
@@ -452,9 +453,10 @@ const DeviceList = React.memo((props: DeviceListProps) => {
                 }).then(res => res.json())
                   .then(async (data) => {
                     if (data.message == 'Updated') {
-                      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 5, "-1");
+                      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", currentPage, pageSize, "-1");
                       setData(temp);
-                      setCurrentPage(1);
+                      setDisplayData(temp);
+                      setCurrentPage(currentPage);
                     }
                   })
                   .catch(error => console.log(error));
@@ -470,13 +472,39 @@ const DeviceList = React.memo((props: DeviceListProps) => {
 
   useEffect(() => {
     async function GetPM() {
-      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 5, "-1");
+      console.log('🚀 Fetching data for columns:', props.columns);
+      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", currentPage, pageSize, "-1");
+      console.log('📥 Retrieved data:', temp);
+      console.log('📊 Retrieved data length:', temp?.length);
       setData(temp);
+      setDisplayData(temp);
     }
     if (props.columns == 3) {
       GetPM();
     }
-  }, [props.columns]);
+  }, [props.columns, currentPage, pageSize]);
+
+  // Sync displayData with data prop changes
+  useEffect(() => {
+    console.log('🔄 Syncing displayData with data:', data);
+    console.log('📊 Data length:', data?.length);
+    setDisplayData(data);
+  }, [data]);
+
+  // Sync data from props when props.data changes
+  useEffect(() => {
+    if (props.columns !== 3) {
+      setData(props.data);
+      setDisplayData(props.data);
+    }
+  }, [props.data, props.columns]);
+
+  // Sync rowCount from props
+  useEffect(() => {
+    if (props.rowCount !== undefined) {
+      setRowCount(props.rowCount);
+    }
+  }, [props.rowCount]);
 
   // Tách riêng SignalR event handlers - chỉ đăng ký một lần khi connection thay đổi
   useEffect(() => {
@@ -491,10 +519,11 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       };
       const handleAssignment = async (status: boolean) => {
         if (status && props.columns == 3) {
-          let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", 1, 5, "-1");
+          let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", currentPage, pageSize, "-1");
           let count = await getTotalNumber('All', '2000-01-01', '2050-12-31', 'All', '___', 'All')
           setRowCount(count);
           setData(temp);
+          setDisplayData(temp);
         }
       };
       connection.on("AssignmentUpdated", handleAssignment);
@@ -583,15 +612,15 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       </div>
       <div className="middleData">
         <Table style={{ width: '88%' }}
-          rowKey={props.columns == 3 ? 'email' : 'deviceCode'}
-          dataSource={props.columns != 4 ? data : storeData}
+          rowKey={props.columns == 3 ? 'code' : 'deviceCode'}
+          dataSource={props.columns != 4 ? displayData : storeData}
           columns={props.columns == 1 ? columns : props.columns == 2 ? columnsSvc : props.columns == 3 ? columnsPN : columnsUser}
           loading={{ spinning: loading, delay: 200 }}
           pagination={props.columns == 1 || props.columns == 2 || props.columns == 4 ? { pageSize: 8 } : customPagination}
           className="device-table"
         />
         <div style={{ width: '10%', marginLeft: '10px', display: 'flex', flexDirection: 'row', justifyContent: 'flex-start' }}>
-          {localStorage.getItem('userRole') != 'Doctor' && localStorage.getItem('userRole') != 'Staff' ? <AddDeviceButton sendStatus={receiveStatus} headerText={props.buttonText} /> : null}
+          {localStorage.getItem('userRole') != 'Doctor' && localStorage.getItem('userRole') != 'Customer' ? <AddDeviceButton sendStatus={receiveStatus} headerText={props.buttonText} /> : null}
         </div>
       </div>
       <Modal title="" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} onClose={() => {

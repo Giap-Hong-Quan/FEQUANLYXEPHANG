@@ -1,22 +1,31 @@
 import { fetchWithTokenRetry } from "../../helpers/tokens";
 export const getProvidedNumber = async (serviceCode: string, start: string, end: string, deviceCode: string, searchText: string, pageNumber: number, pageSize: number, status: string): Promise<any> => {
-  let url = process.env.REACT_APP_API_URL + 'api/Assignment/' + localStorage.getItem('userName')
+  // Try using 'All' to get all assignments instead of filtering by user
+  const userName = localStorage.getItem('userRole') === 'Staff' ? 'All' : (localStorage.getItem('userName') || 'All');
+  let url = process.env.REACT_APP_API_URL + 'api/Assignment/' + userName
     + '/' + serviceCode + '/' + start + '/' + end + '/' + deviceCode + '/' + searchText + '/' + pageNumber + '/' + pageSize + '/' + status;
+  console.log('🔍 Fetching from URL:', url);
+  console.log('👤 UserName parameter:', userName);
+  console.log('👔 User Role:', localStorage.getItem('userRole'));
   let data1: any = [];
   let response = await fetchWithTokenRetry(url);
   if (response.ok) {
     data1 = await response.json();
-    console.log("Data fetched successfully:", data1);
+    console.log("✅ Data fetched successfully - RAW:", data1);
+    console.log("📊 Total records received:", data1.length);
   } else {
-    console.error("Failed to fetch data, status:", response.status);
+    console.error("❌ Failed to fetch data, status:", response.status);
   }
+  const mappedData = data1.map((item: any) => {
+    return {
+      ...item, assignmentDate: formatDate(item.assignmentDate),
+      expireDate: formatDate(item.expireDate)
+    }
+  });
+  console.log("🗺️ Mapped data:", mappedData);
+  console.log("📊 Mapped data length:", mappedData.length);
   return new Promise(resolve => {
-    resolve(data1.map((item: any) => {
-      return {
-        ...item, assignmentDate: formatDate(item.assignmentDate),
-        expireDate: formatDate(item.expireDate)
-      }
-    }));
+    resolve(mappedData);
   })
 }
 export const formatDate = (isoString: string) => {
@@ -81,8 +90,9 @@ export const getServiceData = async (): Promise<any> => {
   })
 }
 export const getTotalNumber = async (serviceCode: string, start: string, end: string, deviceCode: string, searchText: string, status: string): Promise<number> => {
+  const userName = localStorage.getItem('userRole') === 'Staff' ? 'All' : (localStorage.getItem('userName') || 'All');
   return new Promise(resolve => {
-    fetch(process.env.REACT_APP_API_URL + 'api/Assignment/count/' + localStorage.getItem('userName')
+    fetch(process.env.REACT_APP_API_URL + 'api/Assignment/count/' + userName
       + '/' + serviceCode + '/' + start + '/' + end + '/' + deviceCode + '/' + searchText + '/' + status, {
       method: 'GET',
       headers: {
@@ -91,7 +101,10 @@ export const getTotalNumber = async (serviceCode: string, start: string, end: st
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     }).then(response => response.json())
-      .then(data => resolve(data))
+      .then(data => {
+        console.log('📊 Total count received:', data);
+        resolve(data);
+      })
       .catch(error => console.log(error))
   })
 }

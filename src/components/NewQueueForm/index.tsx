@@ -89,7 +89,7 @@ const NewQueueForm: React.FC<NewQueueFormProps> = (props) => {
         setDeviceOptions(
           devices.map((d: any) => ({
             value: d.deviceCode,
-            label: d.deviceCode,
+            label: d.deviceName,
           }))
         );
       } catch (e) {
@@ -161,7 +161,7 @@ const NewQueueForm: React.FC<NewQueueFormProps> = (props) => {
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" block>
+          <Button type="primary" htmlType="submit" block style={{ backgroundColor: '#FF7506', borderColor: '#FF7506' }}>
             In số
           </Button>
         </Form.Item>
