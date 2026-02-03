@@ -51,6 +51,7 @@ const DeviceList = React.memo((props: DeviceListProps) => {
   const [internalData, setInternalData] = useState<any>([]);
   const [displayData, setDisplayData] = useState<any>([]);
   const [serviceOptions, setServiceOptions] = useState<{ value: string, label: string }[]>([])
+  const [serviceStatusMap, setServiceStatusMap] = useState<Map<string, boolean>>(new Map());
   const [internalColumns, setInternalColumns] = useState<any>([]);
   const [dataUserEdit, setDataUserEdit] = useState<any>({});
   const [isModelNumberOpen, setIsModalNumberOpen] = useState(false);
@@ -437,38 +438,119 @@ const DeviceList = React.memo((props: DeviceListProps) => {
       dataIndex: "deviceCode",
       key: "deviceCode",
     },
-    {
-      title: "",
-      key: "actions",
-      render: (record: any) => (
+  ];
+
+  // ===== Cột hành động cho Doctor - Thêm động dựa trên role =====
+  const actionColumnPN = {
+    title: "Khám",
+    dataIndex: "",
+    key: "actions",
+    render: (record: any) => {
+      // Kiểm tra xem dịch vụ có đang hoạt động không
+      const serviceCode = record.serviceCode;
+      const serviceName = record.serviceName;
+      
+      let isServiceActive = true;
+      if (serviceCode && serviceStatusMap.has(serviceCode)) {
+        isServiceActive = serviceStatusMap.get(serviceCode) ?? true;
+      } else if (serviceName && serviceStatusMap.has(serviceName)) {
+        isServiceActive = serviceStatusMap.get(serviceName) ?? true;
+      }
+      
+      const isDisabled = !isServiceActive;
+      
+      return (
         <>
-          <a href="#" style={{ marginRight: 10 }}
-            onClick={() => {
-              if (props.columns == 3) {
-                fetch(process.env.REACT_APP_API_URL + 'api/Assignment/' + record.code + '/1', {
-                  method: 'PUT',
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+          {isDisabled ? (
+            <span 
+              style={{ 
+                color: '#999', 
+                cursor: 'not-allowed',
+                textDecoration: 'none'
+              }}
+              title="Dịch vụ đã ngừng hoạt động"
+            >
+              Khám
+            </span>
+          ) : (
+            <a
+              onClick={() => {
+                fetch(
+                  process.env.REACT_APP_API_URL +
+                    'api/Assignment/' + record.code + '/1',
+                  {
+                    method: 'PUT',
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    },
                   }
-                }).then(res => res.json())
+                )
+                  .then(res => res.json())
                   .then(async (data) => {
-                    if (data.message == 'Updated') {
-                      let temp = await getProvidedNumber("All", "2000-01-01", "2050-12-12", "All", "___", currentPage, pageSize, "-1");
+                    if (data.message === 'Updated') {
+                      const temp = await getProvidedNumber(
+                        "All",
+                        "2000-01-01",
+                        "2050-12-12",
+                        "All",
+                        "___",
+                        currentPage,
+                        pageSize,
+                        "-1"
+                      );
                       setData(temp);
                       setDisplayData(temp);
-                      setCurrentPage(currentPage);
                     }
-                  })
-                  .catch(error => console.log(error));
-              }
-            }}
-          >
-            {props.columns == 3 ? 'Khám' : 'Chi tiết'}
-          </a>
+                  });
+              }}
+            >
+              Khám
+            </a>
+          )}
         </>
-      ),
+      );
     },
-  ];
+  };
+
+  // Thêm cột "Khám" vào columnsPN nếu user là Doctor
+  if (localStorage.getItem('userRole') === 'Doctor') {
+    columnsPN.push(actionColumnPN);
+  }
+  // ================================================================
+
+  // Load service status map when component mounts or when viewing queue list
+  useEffect(() => {
+    async function loadServiceStatusMap() {
+      try {
+        const services = await getServiceData();
+        const statusMap = new Map<string, boolean>();
+        
+        services.forEach((s: any) => {
+          const isActive = s.isInOperation === true || 
+                          s.IsInOperation === true || 
+                          s.isInOperation === 'Active';
+          
+          // Map by serviceCode
+          if (s.serviceCode) {
+            statusMap.set(s.serviceCode, isActive);
+          }
+          // Also map by serviceName as fallback
+          if (s.serviceName) {
+            statusMap.set(s.serviceName, isActive);
+          }
+        });
+        
+        setServiceStatusMap(statusMap);
+        console.log('✅ Service status map loaded:', statusMap);
+      } catch (error) {
+        console.error('❌ Failed to load service status:', error);
+      }
+    }
+    
+    if (props.columns === 3) {
+      loadServiceStatusMap();
+    }
+  }, [props.columns]);
 
   useEffect(() => {
     async function GetPM() {
@@ -526,13 +608,44 @@ const DeviceList = React.memo((props: DeviceListProps) => {
           setDisplayData(temp);
         }
       };
+      
+      // ✅ NEW: Handle service status changes in real-time
+      const handleServiceUpdate = async () => {
+        console.log("🔄 SignalR: Service updated - Reloading service status map...");
+        try {
+          const services = await getServiceData();
+          const statusMap = new Map<string, boolean>();
+          
+          services.forEach((s: any) => {
+            const isActive = s.isInOperation === true || 
+                            s.IsInOperation === true || 
+                            s.isInOperation === 'Active';
+            
+            if (s.serviceCode) {
+              statusMap.set(s.serviceCode, isActive);
+            }
+            if (s.serviceName) {
+              statusMap.set(s.serviceName, isActive);
+            }
+          });
+          
+          setServiceStatusMap(statusMap);
+          console.log("✅ Service status map updated in real-time:", statusMap);
+        } catch (error) {
+          console.error("❌ Failed to reload service status:", error);
+        }
+      };
+      
       connection.on("AssignmentUpdated", handleAssignment);
       connection.on("OnlineNotify", handleron);
       connection.on("OfflineNotify", handleroff);
+      connection.on("ServiceUpdated", handleServiceUpdate); // ✅ NEW EVENT
+      
       return () => {
         connection.off("AssignmentUpdated", handleAssignment);
         connection.off("OnlineNotify", handleron);
         connection.off("OfflineNotify", handleroff);
+        connection.off("ServiceUpdated", handleServiceUpdate); // ✅ CLEANUP
       };
     }
   }, [connection, dispatch, props.columns]);
