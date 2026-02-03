@@ -79,11 +79,18 @@ const NewQueueForm: React.FC<NewQueueFormProps> = (props) => {
         const services = await getServiceData();
         const devices = await getDeviceData();
 
+        // ✅ CHỈ HIỂN THỊ CÁC DỊCH VỤ ĐANG HOẠT ĐỘNG
         setServiceOptions(
-          services.map((s: any) => ({
-            value: s.serviceCode,
-            label: s.serviceName,
-          }))
+          services
+            .filter((s: any) => 
+              s.isInOperation === true || 
+              s.IsInOperation === true || 
+              s.isInOperation === 'Active'
+            )
+            .map((s: any) => ({
+              value: s.serviceCode,
+              label: s.serviceName,
+            }))
         );
 
         setDeviceOptions(
